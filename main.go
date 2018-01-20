@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/http"
 	"log"
 
 	"gopkg.in/telegram-bot-api.v4"
@@ -22,12 +23,21 @@ func main() {
 	updates, err := bot.GetUpdatesChan(u)
 
 	for update := range updates {
-		if update.Message == nil {
+		if update.Message.Voice == nil {
 			continue
+		} 
+		var f tgbotapi.FileConfig
+		f.FileID = update.Message.Voice.FileID
+		file, err := bot.GetFile(f)
+		if err != nil{
+			log.Printf("%s",err)
 		}
-
-		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-
+		resp, err := http.Get(file.FilePath)
+		if err != nil {
+			log.Printf("%s",err)
+		}
+		defer resp.Body.Close()
+		
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
 		msg.ReplyToMessageID = update.Message.MessageID
 
