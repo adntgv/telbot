@@ -1,12 +1,18 @@
 package main
 
 import (
+	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
 
+	"golang.org/x/net/context"
+
+	speech "cloud.google.com/go/speech/apiv1"
+	speechpb "google.golang.org/genproto/googleapis/cloud/speech/v1"
 	"gopkg.in/telegram-bot-api.v4"
 )
 
@@ -40,11 +46,11 @@ func main() {
 			log.Printf("%s", err)
 		}
 		defer resp.Body.Close()
+
 		ogg, err := os.Create("mes.ogg")
 		if err != nil {
 			log.Printf("%s", err)
 		}
-
 		_, err = io.Copy(ogg, resp.Body)
 		if err != nil {
 			log.Printf("%s", err)
@@ -54,9 +60,63 @@ func main() {
 		if err != nil {
 			log.Printf("%s", err)
 		}
-		
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
+
+		rec, err := recognize("mes.wav")
+		if err != nil {
+			log.Printf("%s", err)
+		}
+
+		message := ""
+		for _, result := range rec.Results {
+			for _, alt := range result.Alternatives {
+				fmt.Printf("\"%v\" (confidence=%3f)\n", alt.Transcript, alt.Confidence)
+				message = alt.Transcript
+			}
+		}
+
+		err = os.Remove("mes.ogg")
+		if err != nil {
+			log.Printf("%s", err)
+		}
+
+		err = os.Remove("mes.wav")
+		if err != nil {
+			log.Printf("%s", err)
+		}
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, message)
 		msg.ReplyToMessageID = update.Message.MessageID
 		bot.Send(msg)
 	}
+}
+
+func recognize(file string) (*speechpb.RecognizeResponse, error) {
+	ctx := context.Background()
+
+	// [START init]
+	client, err := speech.NewClient(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// [END init]
+
+	// [START request]
+	data, err := ioutil.ReadFile(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Send the contents of the audio file with the encoding and
+	// and sample rate information to be transcripted.
+	resp, err := client.Recognize(ctx, &speechpb.RecognizeRequest{
+		Config: &speechpb.RecognitionConfig{
+			Encoding:        speechpb.RecognitionConfig_LINEAR16,
+			SampleRateHertz: 48000,
+			LanguageCode:    "ru-RU",
+		},
+		Audio: &speechpb.RecognitionAudio{
+			AudioSource: &speechpb.RecognitionAudio_Content{Content: data},
+		},
+	})
+	// [END request]
+	return resp, err
 }
