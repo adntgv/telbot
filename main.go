@@ -109,9 +109,8 @@ func recognize(file string) (*speechpb.RecognizeResponse, error) {
 	// and sample rate information to be transcripted.
 	resp, err := client.Recognize(ctx, &speechpb.RecognizeRequest{
 		Config: &speechpb.RecognitionConfig{
-			Encoding:        speechpb.RecognitionConfig_LINEAR16,
-			SampleRateHertz: 48000,
-			LanguageCode:    "ru-RU",
+			Encoding:     speechpb.RecognitionConfig_LINEAR16,
+			LanguageCode: "ru-RU",
 		},
 		Audio: &speechpb.RecognitionAudio{
 			AudioSource: &speechpb.RecognitionAudio_Content{Content: data},
