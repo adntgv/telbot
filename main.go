@@ -11,12 +11,13 @@ import (
 )
 
 func main() {
-	bot, err := tgbotapi.NewBotAPI("516390842:AAH7Sd4t_0J5gxyEYHUCbU9D9jwVt7gZdd4")
+	token := "516390842:AAH7Sd4t_0J5gxyEYHUCbU9D9jwVt7gZdd4"
+	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	bot.Debug = false
+	bot.Debug = true
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
@@ -33,8 +34,9 @@ func main() {
 		if err != nil {
 			log.Printf("%s", err)
 		}
-		resp, err := http.Get(file.FilePath)
+		resp, err := http.Get("https://api.telegram.org/file/bot" + token + "/" + file.FilePath)
 		if err != nil {
+			log.Printf("%s", file.FilePath)
 			log.Printf("%s", err)
 		}
 		defer resp.Body.Close()
@@ -52,7 +54,7 @@ func main() {
 		if err != nil {
 			log.Printf("%s", err)
 		}
-
+		
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
 		msg.ReplyToMessageID = update.Message.MessageID
 		bot.Send(msg)
