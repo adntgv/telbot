@@ -55,7 +55,7 @@ func main() {
 		if err != nil {
 			log.Printf("%s", err)
 		}
-		cmd := exec.Command("soundconverter", "mes.ogg", "-b", "-s", ".wav", "-m", "wav")
+		cmd := exec.Command("soundconverter", "./mes.ogg", "-b", "-s", ".wav", "-m", "wav")
 		err = cmd.Run()
 		if err != nil {
 			log.Printf("%s", err)
