@@ -17,7 +17,7 @@ import (
 )
 
 func main() {
-	token := "516390842:AAH7Sd4t_0J5gxyEYHUCbU9D9jwVt7gZdd4"
+	token := os.Args[1]
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		log.Panic(err)
